@@ -1,0 +1,61 @@
+name: release
+
+on:
+  repository_dispatch:
+    types:
+      - release
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+
+    steps:
+      # checkout the code
+      - name: checkout
+        uses: actions/checkout@v1
+
+      # download artifacts
+      - name: download-artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: .artifacts
+
+      # install nodejs
+      - name: install-node
+        uses: actions/setup-node@v1
+
+      # install semantic-release
+      - name: install-semantic-release
+        run: |
+          if [ -f "package.json" ]; then
+            npm install --only=dev
+          else
+            npm install \
+              semantic-release \
+              @semantic-release/git \
+              @semantic-release/github \
+              @semantic-release/changelog \
+              @semantic-release/exec
+          fi
+
+          if [ ! -f ".releaserc*" ]; then
+            tee .releaserc.yaml <<- 'EOF' > /dev/null
+              plugins:
+                - "@semantic-release/commit-analyzer"
+                - path: "@semantic-release/exec"
+                  verifyReleaseCmd: "echo '##vso[build.updatebuildnumber]${nextRelease.version}'"
+                - "@semantic-release/release-notes-generator"
+                - "@semantic-release/changelog"
+                - path: "@semantic-release/git"
+                  message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+                - path: "@semantic-release/github"
+            EOF
+          fi
+
+      # perform the release
+      - name: semantic-release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

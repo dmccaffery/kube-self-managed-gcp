@@ -1,0 +1,13 @@
+# required variables
+name        = "my-kube"
+project     = "my-google-project"
+
+# optional (but likely useful) variables
+region = "europe-west2"
+
+# optional (and maybe useful) variables
+masters = 1
+workers = 3
+
+cpu    = 2
+memory = 4096

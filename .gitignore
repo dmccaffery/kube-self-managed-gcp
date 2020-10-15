@@ -1,0 +1,19 @@
+# hidden files / folders
+.*
+
+# git stuff
+!.github/
+!.gitignore
+!.gitattributes
+
+# editor stuff
+!.editorconfig
+!.vscode/
+
+# terraform stuff
+*.tfstate*
+*.tfvars
+/backend.tf
+
+# keys
+*ecdsa-key*
