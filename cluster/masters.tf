@@ -62,6 +62,16 @@ resource "google_compute_target_pool" "masters" {
   name = "${local.qualified_name}-masters"
 
   instances = [for master in google_compute_instance.master : master.self_link]
+
+  health_checks = [
+    google_compute_http_health_check.masters.self_link
+  ]
+}
+
+resource "google_compute_http_health_check" "masters" {
+  name         = "${local.qualified_name}-masters"
+  request_path = "/livez"
+  port         = 6443
 }
 
 resource "google_compute_address" "masters" {
