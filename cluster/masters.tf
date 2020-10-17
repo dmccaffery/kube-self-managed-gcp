@@ -1,3 +1,14 @@
+resource "google_compute_address" "master" {
+  for_each     = toset(local.masters)
+  name         = each.key
+  subnetwork   = google_compute_subnetwork.subnet.self_link
+  address_type = "INTERNAL"
+
+  depends_on = [
+    google_compute_address.masters
+  ]
+}
+
 resource "google_compute_instance" "master" {
   for_each = toset(local.masters)
   name     = each.key
@@ -16,6 +27,7 @@ resource "google_compute_instance" "master" {
   network_interface {
     network    = google_compute_network.net.self_link
     subnetwork = google_compute_subnetwork.subnet.self_link
+    network_ip = google_compute_address.master[each.key].address
   }
 
   metadata = {
@@ -46,26 +58,16 @@ resource "google_compute_instance" "master" {
   tags = ["ssh", "kube-node", "kube-master"]
 }
 
-resource "google_compute_http_health_check" "masters" {
-  name = "${local.qualified_name}-masters"
-
-  request_path = "/livez"
-  port         = 6443
-}
-
 resource "google_compute_target_pool" "masters" {
   name = "${local.qualified_name}-masters"
 
   instances = [for master in google_compute_instance.master : master.self_link]
-
-  health_checks = [
-    google_compute_http_health_check.masters.self_link
-  ]
 }
 
 resource "google_compute_address" "masters" {
   name         = "${local.qualified_name}-masters"
   address_type = "EXTERNAL"
+  network_tier = "STANDARD"
 }
 
 resource "google_compute_forwarding_rule" "masters" {
@@ -77,6 +79,7 @@ resource "google_compute_forwarding_rule" "masters" {
   ip_address            = google_compute_address.masters.address
   ip_protocol           = "TCP"
   port_range            = "6443"
+  network_tier          = "STANDARD"
 }
 
 data "template_cloudinit_config" "master" {

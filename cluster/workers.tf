@@ -1,3 +1,14 @@
+resource "google_compute_address" "worker" {
+  for_each     = toset(local.workers)
+  name         = each.key
+  subnetwork   = google_compute_subnetwork.subnet.self_link
+  address_type = "INTERNAL"
+
+  depends_on = [
+    google_compute_address.master
+  ]
+}
+
 resource "google_compute_instance" "worker" {
   for_each = toset(local.workers)
   name     = each.key
@@ -16,6 +27,7 @@ resource "google_compute_instance" "worker" {
   network_interface {
     network    = google_compute_network.net.self_link
     subnetwork = google_compute_subnetwork.subnet.self_link
+    network_ip = google_compute_address.worker[each.key].address
   }
 
   metadata = {
