@@ -29,6 +29,6 @@ output "kube_config" {
   value = <<-EOT
     scp -i ${local_file.private-key.filename} 'kube-admin@${module.cluster.nodes.management.external_ip}:$HOME/.kube/config' $HOME/.kube/${var.name}
     export KUBECONFIG="$KUBECONFIG:$HOME/.kube/config:$HOME/.kube/${var.name}"
-    kubectl config view --minify
+    kubectl config view
   EOT
 }
