@@ -45,6 +45,12 @@ variable "public" {
   description = "A value indicating whether or not to expose the kubernetes master API server on the public internet."
 }
 
+variable "wkp_version" {
+  type        = string
+  default     = "master-c44779be"
+  description = "The branch and short git SHA of the version to retrieve from S3."
+}
+
 variable "cidr_blocks" {
   type = object({
     nodes    = string
@@ -68,7 +74,7 @@ locals {
   image_family  = length(local.image_parts) == 2 ? local.image_parts[1] : null
 
   cloud_init         = file("${path.module}/cloud-init.cfg")
-  cloud_init_kubectl = file("${path.module}/cloud-init-kubectl.cfg")
+  cloud_init_kubectl = templatefile("${path.module}/cloud-init-kubectl.cfg", { version = var.wkp_version })
 
   zone = data.google_compute_zones.available.names[0]
 
