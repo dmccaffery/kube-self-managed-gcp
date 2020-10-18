@@ -24,7 +24,7 @@ resource "google_compute_instance" "management" {
   scheduling {
     automatic_restart   = false
     on_host_maintenance = "TERMINATE"
-    preemptible         = true
+    preemptible         = false
   }
 
   network_interface {

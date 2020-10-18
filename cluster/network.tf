@@ -46,7 +46,7 @@ resource "google_compute_router_nat" "nat" {
 }
 
 resource "google_compute_firewall" "icmp" {
-  name    = "allow-icmp"
+  name    = "${var.name}-allow-icmp"
   network = google_compute_network.net.self_link
 
   allow {
@@ -59,7 +59,7 @@ resource "google_compute_firewall" "icmp" {
 }
 
 resource "google_compute_firewall" "ssh" {
-  name    = "allow-ssh"
+  name    = "${var.name}-allow-ssh"
   network = google_compute_network.net.self_link
 
   allow {
@@ -74,7 +74,7 @@ resource "google_compute_firewall" "ssh" {
 }
 
 resource "google_compute_firewall" "nodes" {
-  name    = "allow-kube-node"
+  name    = "${var.name}-allow-kube-services"
   network = google_compute_network.net.self_link
 
   allow {
@@ -90,29 +90,13 @@ resource "google_compute_firewall" "nodes" {
   target_tags = ["kube-node"]
 }
 
-resource "google_compute_firewall" "api-server" {
-  name    = "allow-kube-api-server"
-  network = google_compute_network.net.self_link
-
-  allow {
-    protocol = "tcp"
-    ports    = ["6443"]
-  }
-
-  source_tags = ["kube-node"]
-  target_tags = ["kube-master"]
-}
-
 resource "google_compute_firewall" "health-checks" {
-  name    = "allow-health-checks"
+  name    = "${var.name}-allow-health-checks"
   network = google_compute_network.net.self_link
 
   allow {
     protocol = "tcp"
-  }
-
-  allow {
-    protocol = "udp"
+    ports    = ["8080"]
   }
 
   source_ranges = [
@@ -124,7 +108,7 @@ resource "google_compute_firewall" "health-checks" {
 }
 
 resource "google_compute_firewall" "masters-load-balancer" {
-  name    = "allow-masters-load-balancer"
+  name    = "${var.name}-allow-kube-api-server"
   network = google_compute_network.net.self_link
 
   allow {
@@ -133,6 +117,8 @@ resource "google_compute_firewall" "masters-load-balancer" {
   }
 
   source_ranges = [
-    google_compute_subnetwork.subnet.ip_cidr_range
+    "0.0.0.0/0"
   ]
+
+  target_tags = ["kube-node"]
 }

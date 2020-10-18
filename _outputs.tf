@@ -17,6 +17,18 @@ output "cluster" {
 }
 
 output "ssh" {
-  value       = "ssh kube-admin@${module.cluster.nodes.management.external_ip} -i ${local_file.private-key.filename}"
+  value       = <<-EOT
+    ssh kube-admin@${module.cluster.nodes.management.external_ip} -i ${local_file.private-key.filename}
+    # OR
+    gcloud --project=${var.project} compute ssh ${var.name}
+  EOT
   description = "The SSH command used to access the management node."
+}
+
+output "kube_config" {
+  value = <<-EOT
+    scp -i ${local_file.private-key.filename} 'kube-admin@${module.cluster.nodes.management.external_ip}:$HOME/.kube/config' $HOME/.kube/${var.name}
+    export KUBECONFIG="$KUBECONFIG:$HOME/.kube/config:$HOME/.kube/${var.name}"
+    kubectl config view --minify
+  EOT
 }
