@@ -45,12 +45,6 @@ variable "public" {
   description = "A value indicating whether or not to expose the kubernetes master API server on the public internet."
 }
 
-variable "wkp_version" {
-  type        = string
-  default     = "master-c44779be"
-  description = "The branch and short git SHA of the version to retrieve from S3."
-}
-
 variable "cidr_blocks" {
   type = object({
     nodes    = string

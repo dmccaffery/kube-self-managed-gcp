@@ -20,6 +20,39 @@ variable "region" {
   EOT
 }
 
+variable "wkp_version" {
+  type        = string
+  default     = "master"
+  description = "The branch and short git SHA of the version to retrieve from S3."
+}
+
+variable "docker_credentials" {
+  type = object({
+    username = string
+    password = string
+  })
+  description = <<-EOT
+    The docker hub username and password required to authenticate to docker hub.
+    RECOMMENDATION: It is highly recommended to set the password via an environment variable:
+      TF_VAR_DOCKER_CREDENTIALS='{ username = "username", password = "password" }'
+  EOT
+}
+
+variable "entitlements_file" {
+  type        = string
+  default     = "~/.wks/entitlements"
+  description = <<-EOT
+    The path to the wkp entitlements file.
+    DEFAULT: "~/.wks/entitlements"
+  EOT
+}
+
+variable "kubernetes_version" {
+  type        = string
+  default     = "1.16.11"
+  description = "The version of kubernetes to install using wkp."
+}
+
 variable "image" {
   type        = string
   default     = "centos-cloud/centos-7"
@@ -67,14 +100,5 @@ variable "cidr_blocks" {
 }
 
 locals {
-  services = [
-    "cloudshell.googleapis.com",
-    "compute.googleapis.com",
-    "logging.googleapis.com",
-    "monitoring.googleapis.com",
-    "serviceusage.googleapis.com",
-    "cloudfunctions.googleapis.com"
-  ]
-
   qualified_name = trim(lower(replace(var.name, "/[[:punct:]]|[[:space:]]/", "-")), "-")
 }

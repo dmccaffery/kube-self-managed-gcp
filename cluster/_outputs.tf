@@ -1,19 +1,26 @@
 output "name" {
   value = local.qualified_name
   depends_on = [
-    google_compute_instance.management,
     google_compute_instance.master,
     google_compute_instance.worker
   ]
   description = "The qualified name used to create resources."
 }
 
+output "network" {
+  value = google_compute_network.net.self_link
+}
+
+output "subnetwork" {
+  value = google_compute_network.subnet.self_link
+}
+
+output "load_balancer" {
+  value = google_compute_address.masters.address
+}
+
 output "nodes" {
   value = {
-    load_balancers = {
-      api_server = google_compute_address.masters.address
-    }
-
     management = {
       name        = google_compute_instance.management.name
       internal_ip = google_compute_instance.management.network_interface[0].network_ip
@@ -35,8 +42,9 @@ output "nodes" {
 
 output "user" {
   value = {
-    username = "kube-admin"
-    ssh_keys = var.ssh_keys
+    username    = "kube-admin"
+    private_key = tls_private_key.nodes.private_key_pem
+    public_keys = concat(var.ssh_keys, [local.public_key])
   }
   depends_on = [
     google_compute_instance.management,

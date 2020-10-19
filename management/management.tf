@@ -28,8 +28,8 @@ resource "google_compute_instance" "management" {
   }
 
   network_interface {
-    network    = google_compute_network.net.self_link
-    subnetwork = google_compute_subnetwork.subnet.self_link
+    network    = var.network
+    subnetwork = var.subnetwork
 
     access_config {
     }
@@ -37,7 +37,7 @@ resource "google_compute_instance" "management" {
 
   metadata = {
     enable-oslogin = "FALSE"
-    ssh-keys       = join("\n", [for key in concat(var.ssh_keys, [local.public_key]) : "kube-admin:${key}"])
+    ssh-keys       = join("\n", [for key in var.user.public_keys : "${var.user.username}:${key}"])
     user-data      = data.template_cloudinit_config.management.rendered
   }
 
@@ -52,11 +52,6 @@ resource "google_compute_instance" "management" {
       image = data.google_compute_image.management.self_link
       size  = 30
     }
-  }
-
-  provisioner "file" {
-    content     = tls_private_key.nodes.private_key_pem
-    destination = "/home/kube-admin/.ssh/id_ecdsa"
   }
 
   provisioner "remote-exec" {
@@ -89,5 +84,14 @@ data "template_cloudinit_config" "management" {
     filename     = "cloud-init-kubectl.cfg"
     content_type = "text/cloud-config"
     content      = local.cloud_init_kubectl
+  }
+
+  dynamic "part" {
+    for_each = var.cloud_init
+    content {
+      filename     = part.filename
+      content_type = part.content_type
+      content      = part.content
+    }
   }
 }
